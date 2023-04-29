@@ -5,6 +5,7 @@ REPO_URL="https://github.com/your-username/your-repo.git"
 MASTER_BRANCH="master"
 DEVELOP_BRANCH="develop"
 RELEASE_BRANCH="release"
+NEW_RELEASE_BRANCH="release_v2"
 
 # create the repository
 git clone $REPO_URL
@@ -47,5 +48,5 @@ release:
     - git push origin $MASTER_BRANCH
     - git checkout $DEVELOP_BRANCH
     - git merge $MASTER_BRANCH
-    - git branch -d $RELEASE_BRANCH
+    - git branch -d $NEW_RELEASE_BRANCH
 " > .gitlab-ci.yml
