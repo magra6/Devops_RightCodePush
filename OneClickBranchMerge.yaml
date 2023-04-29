@@ -5,7 +5,6 @@ REPO_URL="https://github.com/your-username/your-repo.git"
 MASTER_BRANCH="master"
 DEVELOP_BRANCH="develop"
 RELEASE_BRANCH="release"
-NEW_RELEASE_BRANCH="release_v2"
 
 # create the repository
 git clone $REPO_URL
