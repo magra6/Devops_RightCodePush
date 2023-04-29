@@ -11,15 +11,36 @@ NEW_RELEASE_BRANCH="release_v2"
 git clone $REPO_URL
 cd your-repo
 
-# create the branches
-git branch $MASTER_BRANCH
-git branch $DEVELOP_BRANCH
-git branch $RELEASE_BRANCH
+# check if the branches already exist
+if git ls-remote --heads $REPO_URL $MASTER_BRANCH | grep -q $MASTER_BRANCH; then
+  echo "Master branch already exists"
+else
+  # create the master branch
+  git init
+  touch README.md
+  git add README.md
+  git commit -m "Initial commit"
+  git branch $MASTER_BRANCH
+  git remote add origin $REPO_URL
+  git push -u origin $MASTER_BRANCH
+fi
 
-# push the branches to the remote repository
-git push --set-upstream origin $MASTER_BRANCH
-git push --set-upstream origin $DEVELOP_BRANCH
-git push --set-upstream origin $RELEASE_BRANCH
+if git ls-remote --heads $REPO_URL $DEVELOP_BRANCH | grep -q $DEVELOP_BRANCH; then
+  echo "Develop branch already exists"
+else
+  # create the develop branch
+  git branch $DEVELOP_BRANCH
+  git push --set-upstream origin $DEVELOP_BRANCH
+fi
+
+if git ls-remote --heads $REPO_URL $RELEASE_BRANCH | grep -q $RELEASE_BRANCH; then
+  echo "Release branch already exists"
+else
+  # create the release branch
+  git checkout $DEVELOP_BRANCH
+  git branch $RELEASE_BRANCH
+  git push --set-upstream origin $RELEASE_BRANCH
+fi
 
 # set up the deployment pipeline
 echo "
@@ -43,10 +64,24 @@ deploy:
 
 release:
   script:
-    - git checkout $MASTER_BRANCH
-    - git merge $RELEASE_BRANCH
-    - git push origin $MASTER_BRANCH
-    - git checkout $DEVELOP_BRANCH
-    - git merge $MASTER_BRANCH
-    - git branch -d $NEW_RELEASE_BRANCH
+# merge the previous release branch into the master branch
+PREVIOUS_RELEASE_BRANCH=$(git branch -r | grep origin/$RELEASE_BRANCH | cut -d/ -f2)
+if [[ $PREVIOUS_RELEASE_BRANCH ]]; then
+  git checkout $MASTER_BRANCH
+  git merge --no-ff origin/$PREVIOUS_RELEASE_BRANCH
+  # add deployment steps here, for example:
+  # ssh into the server and pull the latest changes
+  # run any build steps or migrations
+  # restart the server
+  git push origin $MASTER_BRANCH
+  git checkout $DEVELOP_BRANCH
+fi
+
+# create a new release branch from the develop branch
+NEW_RELEASE_BRANCH="$RELEASE_BRANCH-$(date +%Y%m%d-%H%M%S)"
+git checkout $DEVELOP_BRANCH
+git branch $NEW_RELEASE_BRANCH
+git push --set-upstream origin $NEW_RELEASE_BRANCH
+
+    
 " > .gitlab-ci.yml
