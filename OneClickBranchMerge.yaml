@@ -4,7 +4,15 @@
 REPO_URL="https://github.com/your-username/your-repo.git"
 MASTER_BRANCH="master"
 DEVELOP_BRANCH="develop"
-RELEASE_BRANCH="release"
+
+# Check if the release branch file exists
+if [ -f ".release_branch" ]; then
+  # Read the release branch name from the file
+  RELEASE_BRANCH=$(cat .release_branch)
+else
+  # Set the name of the release branch
+  RELEASE_BRANCH="release"
+fi 
 
 # create the repository
 git clone $REPO_URL
@@ -82,5 +90,7 @@ git checkout $DEVELOP_BRANCH
 git branch $NEW_RELEASE_BRANCH
 git push --set-upstream origin $NEW_RELEASE_BRANCH
 
-    
+#Save the name of the new release branch to the file for next time
+echo $NEW_RELEASE_BRANCH > .release_branch
+
 " > .gitlab-ci.yml
